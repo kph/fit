@@ -42,6 +42,7 @@ type Image struct {
 type ImageLoad struct {
 	Image    *Image
 	LoadAddr uint64
+	LoadSize uint64
 }
 
 func (f *Fit) getProperty(n *fdt.Node, propName string) []byte {
@@ -113,7 +114,8 @@ func (f *Fit) parseImage(cfg *Config, imageName string) {
 
 	il.Image = f.Images[imageName]
 	il.LoadAddr = cfg.NextAddr
-	cfg.NextAddr = il.LoadAddr + uint64(len(il.Image.Data))
+	il.LoadSize = uint64(len(il.Image.Data))
+	cfg.NextAddr = il.LoadAddr + il.LoadSize
 	cfg.ImageList = append(cfg.ImageList, il)
 }
 
