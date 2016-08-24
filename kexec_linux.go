@@ -1,6 +1,11 @@
 // package fit is for parsing flattened image tree binaries
 package fit
 
+import (
+       "syscall"
+       "unsafe"
+)
+
 type kexecSegment struct {
 	buf		*[]byte
 	bufsz		uint
@@ -9,19 +14,23 @@ type kexecSegment struct {
 }
 
 func kexecLoadSyscall(entry uint64, segments *[]kexecSegment, flags uintptr) (err error) {
-	_, _, e := syscall.Syscall6(syscall.SYS_KEXEC_LOAD, uintptr(entry), uintptr(len(*segments)), uintptr(unsafe.Pointer(segments)), uintptr(flags))
+	_, _, e := syscall.Syscall6(syscall.SYS_KEXEC_LOAD, uintptr(entry), uintptr(len(*segments)), uintptr(unsafe.Pointer(segments)), uintptr(flags), uintptr(0), uintptr(0))
+	err = nil
 	if e != 0 {
-		err = errnoErr(e)
+		err = e
 	}
 	return
 }
 
 func (f *Fit) KexecLoadConfig(conf Config) {
-	for _, image := range conf.ImageList {
-		segment[i].buf = &image.Image.data
-		segment[i].bufsz = len(image.Image.data)
-		segment[i].mem = uintptr(image.Image.LoadAddr)
-		segment[i].memsz = image.Image.LoadSize
-	}
+	var segments []kexecSegment
 
+	segments = make([]kexecSegment, len(conf.ImageList), len(conf.ImageList))
+
+	for i, image := range conf.ImageList {
+		segments[i].buf = &image.Image.Data
+		segments[i].bufsz = uint(len(image.Image.Data))
+		segments[i].mem = uintptr(image.LoadAddr)
+		segments[i].memsz = uint(image.LoadSize)
+	}
 }
