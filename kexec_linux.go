@@ -22,7 +22,7 @@ func kexecLoadSyscall(entry uint64, segments *[]kexecSegment, flags uintptr) (er
 	return
 }
 
-func (f *Fit) KexecLoadConfig(conf Config) {
+func (f *Fit) KexecLoadConfig(conf Config) (err error) {
 	var segments []kexecSegment
 
 	segments = make([]kexecSegment, len(conf.ImageList), len(conf.ImageList))
@@ -33,4 +33,8 @@ func (f *Fit) KexecLoadConfig(conf Config) {
 		segments[i].mem = uintptr(image.LoadAddr)
 		segments[i].memsz = uint(image.LoadSize)
 	}
+
+	err = kexecLoadSyscall(conf.BaseAddr, &segments, uintptr(0))
+
+	return
 }
